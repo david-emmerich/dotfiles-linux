@@ -28,7 +28,7 @@ show_always = true
 
 [hostname]
 ssh_only = false
-format = "[macbook]($style)"
+format = "[$hostname]($style)"
 style = "green bold"
 disabled = false
 
@@ -63,9 +63,9 @@ disabled = false
 
 [os.symbols]
 Macos = ""
-Linux = "󰒋"
+Linux = " 󰒋 "
 Alpine = ""
-Debian = "󰒋"
+Debian = " 󰒋 "
 Ubuntu = ""
 Arch = ""
 Fedora = ""
