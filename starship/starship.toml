@@ -1,0 +1,82 @@
+# Starship Prompt Configuration
+# Docs: https://starship.rs/config/
+
+command_timeout = 1000
+add_newline = true
+
+format = """
+$username on $hostname in $directory$git_branch$git_status$git_commit$all$character
+"""
+
+[line_break]
+disabled = true
+
+[localip]
+disabled = false
+format = "[$localipv4](red bold)"
+
+[character]
+success_symbol = "[λ](green)"
+error_symbol = "[λ](red)"
+
+[username]
+style_user = "yellow bold"
+style_root = "red bold"
+format = "[$user]($style)"
+disabled = false
+show_always = true
+
+[hostname]
+ssh_only = false
+format = "[macbook]($style)"
+style = "green bold"
+disabled = false
+
+[git_branch]
+truncation_length = 10
+truncation_symbol = ""
+style = "purple bold"
+
+[git_status]
+ahead = "⇡${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+behind = "⇣${count}"
+staged = "[++($count)](green)"
+style = "red bold"
+
+[git_commit]
+commit_hash_length = 4
+style = "yellow bold"
+
+[python]
+python_binary = ["./venv/bin/python", "python3", "python"]
+format = "[${pyenv_prefix}(${version})( \\($virtualenv\\))]($style) "
+style = "yellow bold"
+
+[nodejs]
+format = "[$symbol($version)]($style) "
+style = "green bold"
+
+[os]
+format = "[$symbol](bold white)"
+disabled = false
+
+[os.symbols]
+Macos = ""
+Linux = "󰒋"
+Alpine = ""
+Debian = "󰒋"
+Ubuntu = ""
+Arch = ""
+Fedora = ""
+
+[cmd_duration]
+min_time = 500
+format = "[$duration](bold yellow)"
+disabled = true
+
+[time]
+disabled = true
+
+[container]
+disabled = true

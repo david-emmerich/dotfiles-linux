@@ -1,0 +1,14 @@
+# Zsh plugins (installed by install.sh)
+zsh/plugins/
+
+# Neovim
+nvim/lazy-lock.json
+
+# Tmux plugins
+tmux/plugins/
+
+# OS
+.DS_Store
+*.swp
+*.swo
+*~
