@@ -5,7 +5,7 @@
 # Symlink this to ~/.zshrc
 
 # Dotfiles directory (auto-detected)
-export DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
+export DOTFILES="${DOTFILES:-$HOME/.dotfiles-linux}"
 
 # ------------------------------------------------------------------------------
 # Modules
@@ -50,18 +50,7 @@ if [[ -f "$HOME/.zshrc.local" ]]; then
   source "$HOME/.zshrc.local"
 fi
 
-# ------------------------------------------------------------------------------
-# Third-Party Completions
-# ------------------------------------------------------------------------------
-
-# OpenClaw completion (optional, only if OpenClaw is installed)
-if command -v openclaw >/dev/null 2>&1 && [[ -f "$HOME/.openclaw/completions/openclaw.zsh" ]]; then
-  source "$HOME/.openclaw/completions/openclaw.zsh"
+# Ensure ~/.local/bin is on PATH (for nvim, starship, fd)
+if [[ -d "$HOME/.local/bin" ]]; then
+  export PATH="$HOME/.local/bin:$PATH"
 fi
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# Created by `pipx` on 2026-04-28 20:09:47
-export PATH="$PATH:/Users/david/.local/bin"

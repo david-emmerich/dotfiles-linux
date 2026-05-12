@@ -31,11 +31,3 @@ alias gd="git diff"
 alias clr="clear"
 alias reload="source ~/.zshrc && echo 'zsh reloaded!'"
 alias zshconfig="$EDITOR ~/.zshrc"
-
-# Homebrew
-alias bi="brew install"
-alias bu="brew update && brew upgrade"
-alias bc="brew cleanup"
-
-# Quick look (macOS)
-alias ql="qlmanage -p 2>/dev/null"
