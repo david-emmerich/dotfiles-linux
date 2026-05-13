@@ -5,7 +5,7 @@
 # Symlink this to ~/.zshrc
 
 # Dotfiles directory (auto-detected)
-export DOTFILES="${DOTFILES:-$HOME/.dotfiles-linux}"
+export DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
 
 # ------------------------------------------------------------------------------
 # Modules
