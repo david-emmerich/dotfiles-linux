@@ -8,8 +8,8 @@
 #   ./install.sh --clean  Remove everything (symlinks, plugins, caches)
 #
 # Prerequisites (installed by Ansible):
-#   apt: tmux, git, fzf, ripgrep, fd-find, curl, zsh, gcc
-#   binaries: nvim, starship (→ ~/.local/bin)
+#   apt: tmux, git, fzf, ripgrep, fd-find, curl, zsh
+#   binaries: nvim, starship (→ /usr/local/bin)
 #
 # This script only handles: symlinks, zsh plugins, TPM, tmux plugin install.
 
@@ -66,7 +66,7 @@ if [[ "$CLEAN" == true ]]; then
   echo -e "${YELLOW}Remaining:${NC}"
   echo "  • $DOTFILES_DIR/ (repo itself — delete manually if needed)"
   echo "  • apt packages — remove with: sudo apt purge tmux fzf ripgrep fd-find zsh"
-  echo "  • binaries in ~/.local/bin (nvim, starship) — remove manually"
+  echo "  • binaries in /usr/local/bin (nvim, starship) — remove manually"
   echo ""
   exit 0
 fi
