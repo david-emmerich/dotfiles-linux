@@ -4,12 +4,14 @@
 # Dotfiles Linux Install Script
 # ==============================================================================
 # Usage:
-#   ./install.sh              Install everything
-#   ./install.sh --skip-nvim  Skip neovim installation
-#   ./install.sh --clean      Remove everything (configs, programs, caches)
+#   ./install.sh          Install dotfiles (symlinks, zsh plugins, tmux/TPM)
+#   ./install.sh --clean  Remove everything (symlinks, plugins, caches)
 #
-# Installs: nvim (minimal config), starship, zsh, tmux
-# No LazyVim, no Treesitter, no LSP — pure Lua plugins only.
+# Prerequisites (installed by Ansible):
+#   apt: tmux, git, fzf, ripgrep, fd-find, curl, zsh, gcc
+#   binaries: nvim, starship (→ ~/.local/bin)
+#
+# This script only handles: symlinks, zsh plugins, TPM, tmux plugin install.
 
 set -euo pipefail
 
@@ -19,17 +21,15 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-DOTFILES_DIR="$HOME/.dotfiles-linux"
-SKIP_NVIM=false
+DOTFILES_DIR="$HOME/.dotfiles"
 CLEAN=false
 
 for arg in "$@"; do
   case $arg in
-    --skip-nvim) SKIP_NVIM=true ;;
-    --clean)     CLEAN=true ;;
+    --clean) CLEAN=true ;;
     *)
       echo -e "${RED}Unknown option: $arg${NC}"
-      echo "Usage: ./install.sh [--skip-nvim] [--clean]"
+      echo "Usage: ./install.sh [--clean]"
       exit 1
       ;;
   esac
@@ -45,8 +45,7 @@ if [[ "$CLEAN" == true ]]; then
   echo -e "${RED}╚══════════════════════════════════════════════╝${NC}"
   echo ""
 
-  # --- Symlinks ---
-  echo -e "${YELLOW}[1/5] Removing symlinks...${NC}"
+  echo -e "${YELLOW}[1/3] Removing symlinks...${NC}"
   for link in "$HOME/.zshrc" "$HOME/.tmux.conf" "$HOME/.config/nvim" "$HOME/.config/starship.toml"; do
     if [[ -L "$link" ]]; then
       rm "$link"
@@ -54,41 +53,20 @@ if [[ "$CLEAN" == true ]]; then
     fi
   done
 
-  # --- Backup files ---
-  echo -e "${YELLOW}[2/5] Removing backup files...${NC}"
-  find "$HOME" -maxdepth 1 -name "*.backup.*" -delete 2>/dev/null && \
-    echo -e "  ${GREEN}✓ removed ~/.*.backup.* files${NC}" || \
-    echo -e "  ${GREEN}✓ no backups found${NC}"
+  echo -e "${YELLOW}[2/3] Removing zsh plugins...${NC}"
+  rm -rf "$DOTFILES_DIR/zsh/plugins"
+  echo -e "  ${GREEN}✓ zsh plugins removed${NC}"
 
-  # --- Neovim ---
-  echo -e "${YELLOW}[3/5] Removing neovim...${NC}"
-  rm -f "$HOME/.local/bin/nvim"
-  rm -rf "$HOME/.local/share/nvim"
-  rm -rf "$HOME/.local/state/nvim"
-  rm -rf "$HOME/.cache/nvim"
-  rm -rf "$HOME/.local/lib/nvim"
-  echo -e "  ${GREEN}✓ neovim removed${NC}"
-
-  # --- Starship ---
-  echo -e "${YELLOW}[4/5] Removing starship...${NC}"
-  rm -f "$HOME/.local/bin/starship"
-  echo -e "  ${GREEN}✓ starship removed${NC}"
-
-  # --- Tmux plugins ---
-  echo -e "${YELLOW}[5/5] Removing tmux plugins...${NC}"
+  echo -e "${YELLOW}[3/3] Removing tmux plugins...${NC}"
   rm -rf "$HOME/.tmux"
   echo -e "  ${GREEN}✓ tmux plugins removed${NC}"
 
-  # --- Summary ---
   echo ""
-  echo -e "${GREEN}╔══════════════════════════════════════════════╗${NC}"
-  echo -e "${GREEN}║           Clean complete!                     ║${NC}"
-  echo -e "${GREEN}╚══════════════════════════════════════════════╝${NC}"
-  echo ""
+  echo -e "${GREEN}Clean complete!${NC}"
   echo -e "${YELLOW}Remaining:${NC}"
-  echo "  • ~/.dotfiles-linux/ (repo itself — delete manually if needed)"
-  echo "  • apt packages (tmux, git, fzf, ripgrep, fd-find, zsh, gcc)"
-  echo "    → remove with: sudo apt purge tmux fzf ripgrep fd-find zsh"
+  echo "  • $DOTFILES_DIR/ (repo itself — delete manually if needed)"
+  echo "  • apt packages — remove with: sudo apt purge tmux fzf ripgrep fd-find zsh"
+  echo "  • binaries in ~/.local/bin (nvim, starship) — remove manually"
   echo ""
   exit 0
 fi
@@ -98,93 +76,55 @@ fi
 # ==============================================================================
 
 echo -e "${BLUE}╔══════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║       Dotfiles Linux Installation            ║${NC}"
+echo -e "${BLUE}║       Dotfiles Installation                   ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
 echo ""
 
 if [[ ! -d "$DOTFILES_DIR" ]]; then
   echo -e "${RED}Error: $DOTFILES_DIR not found.${NC}"
   echo "Please clone the repository first:"
-  echo "  git clone <repo-url> ~/.dotfiles-linux"
+  echo "  git clone <repo-url> ~/.dotfiles"
   exit 1
 fi
 
 cd "$DOTFILES_DIR"
 
 # ------------------------------------------------------------------------------
-# [1/6] Install packages via apt
+# [1/4] Create symlinks
 # ------------------------------------------------------------------------------
 
-echo -e "${YELLOW}[1/6] Installing packages via apt...${NC}"
+echo -e "${YELLOW}[1/4] Creating symlinks...${NC}"
 
-APT_PACKAGES=(tmux git fzf ripgrep fd-find curl zsh gcc)
-
-sudo apt-get update -qq
-sudo apt-get install -y "${APT_PACKAGES[@]}"
-echo -e "  ${GREEN}✓ apt packages installed${NC}"
-
-# ------------------------------------------------------------------------------
-# [2/6] Install Neovim + Starship from GitHub
-# ------------------------------------------------------------------------------
-
-echo -e "${YELLOW}[2/6] Installing binaries...${NC}"
-
-mkdir -p "$HOME/.local/bin"
-
-# Neovim
-if [[ "$SKIP_NVIM" == false ]]; then
-  NVIM_BIN="$HOME/.local/bin/nvim"
-  NVIM_LATEST=$(curl -sL https://api.github.com/repos/neovim/neovim/releases/latest | grep -o '"tag_name": "[^"]*"' | cut -d'"' -f4)
-  NVIM_CURRENT=$( "$NVIM_BIN" --version 2>/dev/null | head -1 | grep -o 'v[0-9.]*' || echo "none" )
-
-  if [[ "$NVIM_CURRENT" == "$NVIM_LATEST" ]]; then
-    echo -e "  ${GREEN}✓ neovim $NVIM_LATEST (already installed)${NC}"
-  else
-    echo -e "  ${YELLOW}Installing neovim $NVIM_LATEST...${NC}"
-    TMP=$(mktemp -d)
-    curl -sL "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz" \
-      | tar -xz -C "$TMP"
-    cp -r "$TMP"/nvim-linux-x86_64/* "$HOME/.local/"
-    rm -rf "$TMP"
-    echo -e "  ${GREEN}✓ neovim $NVIM_LATEST → $HOME/.local/bin/nvim${NC}"
+backup_if_exists() {
+  if [[ -e "$1" && ! -L "$1" ]]; then
+    mv "$1" "$1.backup.$(date +%Y%m%d%H%M%S)"
+    echo -e "  ${YELLOW}Backed up: $1${NC}"
   fi
-fi
+}
 
-# fd-find: 'fdfind' on Debian/Ubuntu, create 'fd' symlink
-if command -v fdfind &>/dev/null && ! command -v fd &>/dev/null; then
-  ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
-  echo -e "  ${GREEN}✓ fd symlink → $HOME/.local/bin/fd${NC}"
-fi
+mkdir -p "$HOME/.config"
 
-# Starship
-if ! command -v starship &>/dev/null && [[ ! -x "$HOME/.local/bin/starship" ]]; then
-  echo -e "  ${YELLOW}Installing starship...${NC}"
-  curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir "$HOME/.local/bin"
-  echo -e "  ${GREEN}✓ starship → $HOME/.local/bin/starship${NC}"
-else
-  echo -e "  ${GREEN}✓ starship (already installed)${NC}"
-fi
+backup_if_exists "$HOME/.zshrc"
+ln -sf "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
+echo -e "  ${GREEN}✓ ~/.zshrc${NC}"
 
-# Ensure PATH for verification
-export PATH="$HOME/.local/bin:$PATH"
+backup_if_exists "$HOME/.config/starship.toml"
+ln -sf "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
+echo -e "  ${GREEN}✓ ~/.config/starship.toml${NC}"
 
-# Verify
-REQUIRED_TOOLS=(starship tmux git fzf rg)
-[[ "$SKIP_NVIM" == false ]] && REQUIRED_TOOLS+=(nvim)
-MISSING=()
-for tool in "${REQUIRED_TOOLS[@]}"; do
-  command -v "$tool" &>/dev/null || MISSING+=("$tool")
-done
-if [[ ${#MISSING[@]} -gt 0 ]]; then
-  echo -e "${RED}Still missing after install: ${MISSING[*]}${NC}"
-  exit 1
-fi
+backup_if_exists "$HOME/.tmux.conf"
+ln -sf "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.tmux.conf"
+echo -e "  ${GREEN}✓ ~/.tmux.conf${NC}"
+
+backup_if_exists "$HOME/.config/nvim"
+ln -sf "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
+echo -e "  ${GREEN}✓ ~/.config/nvim${NC}"
 
 # ------------------------------------------------------------------------------
-# [3/6] Install Zsh plugins
+# [2/4] Install Zsh plugins
 # ------------------------------------------------------------------------------
 
-echo -e "${YELLOW}[3/6] Installing Zsh plugins...${NC}"
+echo -e "${YELLOW}[2/4] Installing Zsh plugins...${NC}"
 
 ZSH_PLUGINS_DIR="$DOTFILES_DIR/zsh/plugins"
 mkdir -p "$ZSH_PLUGINS_DIR"
@@ -215,10 +155,10 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# [4/6] Install TPM (Tmux Plugin Manager)
+# [3/4] Install TPM (Tmux Plugin Manager)
 # ------------------------------------------------------------------------------
 
-echo -e "${YELLOW}[4/6] Installing TPM...${NC}"
+echo -e "${YELLOW}[3/4] Installing TPM...${NC}"
 
 TPM_DIR="$HOME/.tmux/plugins/tpm"
 mkdir -p "$HOME/.tmux/plugins"
@@ -231,45 +171,10 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# [5/6] Create symlinks
+# [4/4] Install Tmux plugins
 # ------------------------------------------------------------------------------
 
-echo -e "${YELLOW}[5/6] Creating symlinks...${NC}"
-
-backup_if_exists() {
-  if [[ -e "$1" && ! -L "$1" ]]; then
-    mv "$1" "$1.backup.$(date +%Y%m%d%H%M%S)"
-    echo -e "  ${YELLOW}Backed up: $1${NC}"
-  fi
-}
-
-mkdir -p "$HOME/.config"
-
-backup_if_exists "$HOME/.zshrc"
-ln -sf "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
-echo -e "  ${GREEN}✓ ~/.zshrc${NC}"
-
-backup_if_exists "$HOME/.config/starship.toml"
-ln -sf "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
-echo -e "  ${GREEN}✓ ~/.config/starship.toml${NC}"
-
-backup_if_exists "$HOME/.tmux.conf"
-ln -sf "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.tmux.conf"
-echo -e "  ${GREEN}✓ ~/.tmux.conf${NC}"
-
-if [[ "$SKIP_NVIM" == false ]]; then
-  backup_if_exists "$HOME/.config/nvim"
-  ln -sf "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
-  echo -e "  ${GREEN}✓ ~/.config/nvim${NC}"
-else
-  echo -e "  ${YELLOW}~/.config/nvim skipped (--skip-nvim)${NC}"
-fi
-
-# ------------------------------------------------------------------------------
-# [6/6] Install Tmux plugins
-# ------------------------------------------------------------------------------
-
-echo -e "${YELLOW}[6/6] Installing Tmux plugins...${NC}"
+echo -e "${YELLOW}[4/4] Installing Tmux plugins...${NC}"
 
 if [[ -x "$TPM_DIR/bin/install_plugins" ]]; then
   TMUX_TMPDIR=/tmp "$TPM_DIR/bin/install_plugins" 2>/dev/null \
@@ -297,12 +202,4 @@ echo "  2. Install Neovim plugins (first time):"
 echo -e "     ${YELLOW}nvim --headless +Lazy! sync +qa${NC}"
 echo ""
 echo "  3. In tmux, press 'prefix + I' to install plugins"
-echo ""
-echo -e "${BLUE}Installed:${NC}"
-echo "  • Starship prompt"
-echo "  • Zsh with 4 plugins"
-echo "  • Tmux with TPM"
-echo "  • Neovim (minimal: Snacks, ToggleTerm, WinShift, WhichKey, mini.surround)"
-echo ""
-echo -e "${YELLOW}Note: No Treesitter, no LSP — pure Lua only.${NC}"
 echo ""
