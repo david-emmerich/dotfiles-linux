@@ -70,9 +70,17 @@ vim.keymap.set("v", "<leader>#", "gc", { remap = true, desc = "Comment selection
 -- Line Movement
 -- ------------------------------------------------------------------------------
 
-vim.keymap.set("n", "<CR>", ":call append(line('.') - 1, '')<cr>", { remap = false, desc = "Insert blank line above" })
-vim.keymap.set("n", "<Up>", "ddkP", { desc = "Move line up" })
-vim.keymap.set("n", "<Down>", "ddp", { desc = "Move line down" })
+-- Insert blank line above with <CR>, but only in normal file buffers.
+-- Quickfix, help, man, terminal, etc. need <CR> for their own actions.
+vim.keymap.set("n", "<CR>", function()
+  if vim.bo.buftype ~= "" then
+    return "<CR>"
+  end
+  return ":call append(line('.') - 1, '')<cr>"
+end, { expr = true, desc = "Insert blank line above (file buffers only)" })
+
+vim.keymap.set("n", "<A-Up>", "ddkP", { desc = "Move line up" })
+vim.keymap.set("n", "<A-Down>", "ddp", { desc = "Move line down" })
 
 -- ------------------------------------------------------------------------------
 -- Insert Mode Helpers
