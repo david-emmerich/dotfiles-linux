@@ -31,3 +31,7 @@ alias gd="git diff"
 alias clr="clear"
 alias reload="source ~/.zshrc && echo 'zsh reloaded!'"
 alias zshconfig="$EDITOR ~/.zshrc"
+
+# Sudo: trailing space lets zsh expand aliases on the *next* word too,
+# so `sudo v` becomes `sudo nvim` etc.
+alias sudo='sudo '
