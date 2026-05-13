@@ -3,9 +3,9 @@
 # ==============================================================================
 
 # Navigation
-alias l="ls -AGhF"
-alias ll="ls -lAGhF"
-alias la="ls -AGhF"
+alias l="ls --color=auto -AhF"
+alias ll="ls --color=auto -lAhF"
+alias la="ls --color=auto -AhF"
 alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
