@@ -62,10 +62,11 @@ format = "[$symbol](bold white)"
 disabled = false
 
 [os.symbols]
-Macos = ""
 Linux = " 󰒋 "
-Alpine = ""
+Raspbian = " 󰒋 "
 Debian = " 󰒋 "
+Macos = ""
+Alpine = ""
 Ubuntu = ""
 Arch = ""
 Fedora = ""
