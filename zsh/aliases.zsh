@@ -39,7 +39,8 @@ alias sudo='sudo '
 # Route `sudo nvim <file>` (and vim) through sudoedit so the editor runs as
 # the invoking user — keeps your nvim config, plugins, and caches intact.
 # Falls through to real sudo for everything else (incl. `sudo nvim` without a file).
-sudo() {
+# Quote the name so zsh doesn't try to alias-expand `sudo` while parsing the def.
+'sudo'() {
   if [[ ( "$1" == "nvim" || "$1" == "vim" ) && $# -gt 1 ]]; then
     shift
     SUDO_EDITOR=nvim command sudoedit "$@"
